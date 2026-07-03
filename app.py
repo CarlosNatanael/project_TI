@@ -20,7 +20,7 @@ class Ticket(db.Model):
     descricao = db.Column(db.Text, nullable=False)
     tipo = db.Column(db.String(20), nullable=False) 
     prioridade = db.Column(db.String(20), default='Média') 
-    tecnico = db.Column(db.String(50))
+    tecnico = db.Column(db.String(50), default='Lucas')
     status = db.Column(db.String(20), default='Aberto') 
     motivo_pendencia = db.Column(db.Text)
     solucao_aplicada = db.Column(db.Text)
@@ -80,6 +80,13 @@ def exportar():
     response.headers["Content-Disposition"] = "attachment; filename=relatorio_tickets_ti.csv"
     response.headers["Content-type"] = "text/csv; charset=utf-8"
     return response
+
+@app.route('/excluir/<int:id>', methods=['GET', 'POST'])
+def excluir(id):
+    ticket = Ticket.query.get_or_404(id)
+    db.session.delete(ticket)
+    db.session.commit()
+    return redirect('/consulta')
 
 @app.route('/consulta')
 def consulta():

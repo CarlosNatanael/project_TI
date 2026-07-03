@@ -51,12 +51,7 @@
             
             <div class="form-group">
                 <label>Técnico Responsável:</label>
-                <select name="tecnico">
-                    <option value="" {% if not ticket.tecnico %}selected{% endif %}>Não Atribuído</option>
-                    {% for tec in tecnicos %}
-                    <option value="{{ tec }}" {% if ticket.tecnico == tec %}selected{% endif %}>{{ tec }}</option>
-                    {% endfor %}
-                </select>
+                <input type="text" name="tecnico" value="Lucas" readonly style="background-color: var(--table-header-bg); cursor: not-allowed; color: var(--text-color);">
             </div>
 
             <div class="form-group">

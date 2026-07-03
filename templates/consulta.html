@@ -72,9 +72,11 @@
                     <strong>{{ item.assunto }}</strong><br>
                     <span class="badge">{{ item.tipo }}</span>
                     <span class="badge" style="
-                        {% if item.prioridade == 'Alta' %} background-color: #e74c3c; 
-                        {% elif item.prioridade == 'Crítica' %} background-color: #c0392b; 
-                        {% else %} background-color: #34495e; {% endif %}">
+                        {% if item.prioridade == 'Baixa' %} background-color: #27ae60; color: white;
+                        {% elif item.prioridade == 'Média' %} background-color: #f1c40f; color: black;
+                        {% elif item.prioridade == 'Alta' %} background-color: #e67e22; color: white;
+                        {% elif item.prioridade == 'Crítica' %} background-color: #c0392b; color: white;
+                        {% else %} background-color: #34495e; color: white; {% endif %}">
                         {{ item.prioridade }}
                     </span>
                     <br>
@@ -99,7 +101,10 @@
 
                 <td data-label="Técnico">
                     <strong>{{ item.tecnico or 'Sem Atribuição' }}</strong><br>
-                    <a href="/editar/{{ item.id }}" class="btn-edit" style="text-decoration: none; margin-top: 5px; display: inline-block;">✏️ Atualizar</a>
+                    <div style="margin-top: 5px; display: flex; gap: 5px; flex-wrap: wrap;">
+                        <a href="/editar/{{ item.id }}" class="btn-edit" style="text-decoration: none; display: inline-block;"> Atualizar</a>
+                        <a href="/excluir/{{ item.id }}" class="btn-edit" style="text-decoration: none; display: inline-block; background-color: #e74c3c; border: none; color: white;" onclick="return confirm('Tem certeza que deseja EXCLUIR DEFINITIVAMENTE o ticket #{{ item.id }}? Esta ação não pode ser desfeita.');">Excluir</a>
+                    </div>
                 </td>
             </tr>
             {% else %}
