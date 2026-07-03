@@ -1,0 +1,571 @@
+:root {
+    --primary-color: #2c3e50;
+    --accent-color: #3498db;
+    --bg-color: #f4f7f6;
+    --card-bg: #ffffff;
+    --text-color: #333;
+    --border-color: #ddd;
+    --table-header-bg: #f8f9fa; /* Nova variável para o cabeçalho da tabela */
+}
+
+/* Definição das cores para o modo escuro */
+body.dark-mode {
+    --primary-color: #1a1a1a;
+    --accent-color: #2980b9;
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --border-color: #444; /* Borda mais suave no modo escuro */
+    --table-header-bg: #2a2a2a; /* Cabeçalho escuro para a tabela */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+}
+
+.container {
+    width: 95%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Navbar Responsiva */
+.navbar {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 0;
+    margin-bottom: 1.5rem;
+}
+
+.navbar .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+@media (min-width: 768px) {
+    .navbar .container {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
+.logo {
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 15px;
+    align-items: center; /* Alinha o botão de tema com os links */
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+}
+
+/* Botão do Tema */
+.theme-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+}
+
+/* Containers de Conteúdo */
+.form-container, .list-container {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+    color: var(--text-color);
+}
+
+h2 {
+    margin-bottom: 1.5rem;
+    color: var(--text-color); /* Correção: Agora inverte junto com o texto padrão */
+    border-left: 5px solid var(--accent-color);
+    padding-left: 10px;
+}
+
+/* Formulário Adaptável */
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+/* Correção: Unificamos as regras de inputs para evitar conflitos */
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color); /* Correção: Borda dinâmica */
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+/* Arruma a cor do placeholder no dark mode */
+input::placeholder, textarea::placeholder {
+    color: #888;
+}
+
+.btn-submit, .btn-search {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn-submit:hover, .btn-search:hover {
+    background: #2980b9;
+}
+
+/* Busca Responsiva */
+.search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 600px) {
+    .search-form {
+        flex-direction: row;
+    }
+    .search-form input {
+        flex: 1;
+    }
+}
+
+/* TABELA RESPONSIVA */
+@media (max-width: 768px) {
+    .data-table thead {
+        display: none;
+    }
+
+    .data-table, .data-table tbody, .data-table tr, .data-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .data-table tr {
+        margin-bottom: 15px;
+        border: 1px solid var(--border-color); /* Correção */
+        border-radius: 8px;
+        padding: 10px;
+        background: var(--card-bg); /* Correção */
+    }
+
+    .data-table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border-bottom: 1px solid var(--border-color); /* Correção */
+    }
+
+    .data-table td:last-child {
+        border-bottom: none;
+    }
+
+    .data-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        font-weight: bold;
+        text-align: left;
+        /* Correção: Rótulos do mobile também devem inverter */
+        color: var(--text-color); 
+    }
+}
+
+/* Estilo Desktop da Tabela */
+@media (min-width: 769px) {
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .data-table th, .data-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+
+        /* Adicione estas três linhas abaixo: */
+        max-width: 300px; /* Dá um limite de largura para a célula não crescer infinitamente */
+        overflow-wrap: break-word; /* Padrão moderno para quebrar o texto */
+        word-break: break-word; /* Força a quebra no meio da "palavra" se não houver espaços */
+    }
+    .data-table th {
+        background-color: var(--table-header-bg); /* Correção: Fundo da tabela adaptável */
+    }
+}
+
+.footer {
+    text-align: center;
+    padding: 2rem;
+    color: #888;
+    font-size: 0.8rem;
+}
+/* --- ESTILOS DO MODAL --- */
+.modal {
+    display: none; /* Escondido por padrão */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo escuro transparente */
+    backdrop-filter: blur(3px); /* Efeito legal de vidro/desfoque */
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    margin: 10% auto; /* Centraliza verticalmente */
+    padding: 25px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px; /* Não deixa ficar largo demais no PC */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.modal-content h3 {
+    margin-bottom: 15px;
+    padding-right: 30px; /* Espaço para não encostar no X */
+}
+
+.modal-content p {
+    white-space: pre-wrap; /* MUITO IMPORTANTE: Respeita as quebras de linha (Enter) que o cliente deu */
+    max-height: 60vh; /* Se o texto for absurdamente gigante, ele cria rolagem dentro da janela */
+    overflow-y: auto;
+    word-break: break-word; /* Resolve o problema das letras infinitas */
+    padding-right: 10px;
+}
+
+/* O botão "X" de fechar */
+.close-modal {
+    color: var(--text-color);
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-modal:hover {
+    color: var(--accent-color);
+}
+
+/* Estilo do linkzinho "Ler tudo" na tabela */
+.btn-modal-open {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    padding: 5px 0 0 0;
+    text-decoration: underline;
+}
+
+.btn-modal-open:hover {
+    color: var(--primary-color);
+}
+
+/* --- ETIQUETAS (BADGES) DE ASSUNTO --- */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 12px;
+    color: white;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Cor genérica caso adicione novos assuntos depois */
+.badge {
+    background-color: var(--primary-color);
+}
+
+/* Cor específica para Áudio (Roxo/Azul escuro) */
+.badge-audio {
+    background-color: #8e44ad; 
+}
+
+/* Cor específica para Automação (Verde) */
+.badge-automacao {
+    background-color: #27ae60;
+}
+
+.btn-back {
+    display: inline-block;
+    background: #95a5a6; /* Cor cinza neutra */
+    color: white;
+    text-decoration: none;
+    padding: 14px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    width: 100%;
+    transition: background 0.3s;
+}
+
+.btn-back:hover {
+    background: #7f8c8d;
+}
+
+/* Organiza os botões lado a lado */
+.form-actions {
+    display: flex;
+    gap: 15px; /* Espaço entre os botões */
+    margin-top: 10px;
+}
+
+/* Faz o botão de salvar ocupar o espaço restante ou dividir igualmente */
+.btn-submit {
+    flex: 1; 
+}
+
+/* Estilo do botão de voltar ajustado */
+.btn-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #95a5a6;
+    color: white;
+    text-decoration: none;
+    padding: 14px 25px;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background 0.3s;
+    white-space: nowrap; /* Impede que o texto quebre em duas linhas */
+}
+
+.btn-back:hover {
+    background: #7f8c8d;
+}
+
+/* --- ALINHAMENTO DOS BOTÕES DE AÇÃO --- */
+.botoes-container {
+    display: flex;
+    gap: 15px; /* Espaço entre os botões */
+    margin-top: 15px;
+    width: 100%;
+}
+
+/* O flex: 1 faz com que os dois botões dividam o espaço meio a meio */
+.btn-submit {
+    flex: 1;
+    /* Suas outras configurações de cor/fundo do btn-submit continuam valendo */
+}
+
+.btn-back {
+    flex: 1; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #95a5a6; /* Cor cinza neutra */
+    color: white;
+    text-decoration: none;
+    padding: 14px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn-back:hover {
+    background: #7f8c8d; /* Fica um pouco mais escuro ao passar o mouse */
+}
+
+@media (min-width: 600px) {
+    .search-form {
+        flex-direction: row;
+    }
+    .search-form input {
+        flex: 2; /* A barra de texto fica maior */
+    }
+    .search-form select {
+        flex: 1; /* O dropdown fica proporcional */
+        width: auto;
+    }
+}
+
+/* --- NOVO ESTILO DA BUSCA LIMPA --- */
+.search-form-clean {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 2rem;
+    background: var(--table-header-bg); 
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    color: var(--text-color); /* <-- Adicione esta linha */
+}
+
+.search-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Customização do Checkbox para parecer um botão */
+.checkbox-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 10px 15px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    user-select: none;
+    transition: border-color 0.3s;
+    color: var(--text-color); /* <-- Adicione esta linha */
+}
+
+.checkbox-toggle:hover {
+    border-color: var(--accent-color);
+}
+
+.checkbox-toggle input {
+    width: auto;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+}
+
+/* Layout para telas maiores */
+@media (min-width: 768px) {
+    .search-row {
+        flex-direction: row;
+    }
+    .search-row input {
+        flex: 1; /* O input cresce para ocupar o espaço */
+    }
+    .search-row button {
+        width: 150px; /* Largura fixa para o botão buscar */
+    }
+    
+    .filter-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    .filter-row select {
+        width: auto;
+        min-width: 180px;
+    }
+}
+
+/* --- EFEITO SANFONA (ACCORDION) DA BUSCA --- */
+.accordion-btn {
+    width: 100%;
+    background: var(--table-header-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 12px 15px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    transition: background 0.3s;
+}
+
+.accordion-btn:hover {
+    background: var(--card-bg);
+}
+
+/* Animação fluida utilizando CSS Grid */
+.accordion-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease-out;
+}
+
+.accordion-wrapper.open {
+    grid-template-rows: 1fr;
+}
+
+.accordion-inner {
+    overflow: hidden;
+}
+
+/* Ajusta as margens para não atrapalhar a animação de altura */
+.accordion-inner .search-form-clean {
+    margin-top: 5px;
+    margin-bottom: 1.5rem;
+}
+
+/* Estilo do botão de editar na tabela */
+.btn-edit {
+    color: var(--accent-color);
+    font-size: 0.85rem;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.btn-edit:hover {
+    color: var(--primary-color);
+}

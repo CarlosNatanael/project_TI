@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>{% if ticket %}Tratar Ticket #{{ ticket.id }}{% else %}Abrir Novo Ticket{% endif %}</h2>
+    <form method="POST">
+        
+        <div class="form-group">
+            <label>Solicitante:</label>
+            <input type="text" name="solicitante" required placeholder="Ex: João da Silva" value="{{ ticket.solicitante if ticket else '' }}" {% if ticket %}readonly{% endif %}>
+        </div>
+
+        <div class="form-group">
+            <label>Setor/Área:</label>
+            <input type="text" name="setor" required placeholder="Ex: Financeiro, RH, Logística" value="{{ ticket.setor if ticket else '' }}" {% if ticket %}readonly{% endif %}>
+        </div>
+
+        <div class="form-group">
+            <label>Assunto (Resumo):</label>
+            <input type="text" name="assunto" required placeholder="Ex: Impressora sem conexão" value="{{ ticket.assunto if ticket else '' }}" {% if ticket %}readonly{% endif %}>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo:</label>
+            <select name="tipo" required {% if ticket %}disabled{% endif %}>
+                <option value="" disabled {% if not ticket %}selected{% endif %}>Selecione o tipo...</option>
+                <option value="Incidente" {% if ticket and ticket.tipo == 'Incidente' %}selected{% endif %}>Incidente (Falha/Erro em algo existente)</option>
+                <option value="Requisição" {% if ticket and ticket.tipo == 'Requisição' %}selected{% endif %}>Requisição (Pedido de novo acesso/equipamento)</option>
+            </select>
+            {% if ticket %}<input type="hidden" name="tipo" value="{{ ticket.tipo }}">{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>Prioridade:</label>
+            <select name="prioridade" required>
+                <option value="Baixa" {% if ticket and ticket.prioridade == 'Baixa' %}selected{% endif %}>Baixa</option>
+                <option value="Média" {% if not ticket or (ticket and ticket.prioridade == 'Média') %}selected{% endif %}>Média</option>
+                <option value="Alta" {% if ticket and ticket.prioridade == 'Alta' %}selected{% endif %}>Alta</option>
+                <option value="Crítica" {% if ticket and ticket.prioridade == 'Crítica' %}selected{% endif %}>Crítica</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Descrição do Problema/Pedido:</label>
+            <textarea name="descricao" rows="4" required {% if ticket %}readonly{% endif %}>{{ ticket.descricao if ticket else '' }}</textarea>
+        </div>
+
+        {% if ticket %}
+            <hr style="margin: 20px 0; border: 1px solid var(--border-color);">
+            <h3>Área do Técnico</h3>
+            
+            <div class="form-group">
+                <label>Técnico Responsável:</label>
+                <select name="tecnico">
+                    <option value="" {% if not ticket.tecnico %}selected{% endif %}>Não Atribuído</option>
+                    {% for tec in tecnicos %}
+                    <option value="{{ tec }}" {% if ticket.tecnico == tec %}selected{% endif %}>{{ tec }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Status:</label>
+                <select name="status" id="status_select">
+                    <option value="Aberto" {% if ticket.status == 'Aberto' %}selected{% endif %}>Aberto</option>
+                    <option value="Em andamento" {% if ticket.status == 'Em andamento' %}selected{% endif %}>Em andamento</option>
+                    <option value="Pendente" {% if ticket.status == 'Pendente' %}selected{% endif %}>Pendente (Aguardando terceiros ou aprovação)</option>
+                    <option value="Concluído" {% if ticket.status == 'Concluído' %}selected{% endif %}>Concluído</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="div_motivo" style="display: none; background: rgba(230, 126, 34, 0.1); padding: 10px; border-left: 4px solid #e67e22;">
+                <label>Motivo da Pendência:</label>
+                <textarea name="motivo_pendencia" id="motivo_pendencia" rows="2">{{ ticket.motivo_pendencia or '' }}</textarea>
+            </div>
+
+            <div class="form-group" id="div_solucao" style="display: none; background: rgba(39, 174, 96, 0.1); padding: 10px; border-left: 4px solid #27ae60;">
+                <label>Solução Aplicada:</label>
+                <textarea name="solucao_aplicada" id="solucao_aplicada" rows="3">{{ ticket.solucao_aplicada or '' }}</textarea>
+            </div>
+        {% endif %}
+
+        <div class="botoes-container">
+            <button type="submit" class="btn-submit">
+                {% if ticket %}Salvar Atendimento{% else %}Abrir Ticket{% endif %}
+            </button>
+            {% if ticket %}
+                <a href="/consulta" class="btn-back">Voltar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.getElementById('status_select');
+        const divMotivo = document.getElementById('div_motivo');
+        const divSolucao = document.getElementById('div_solucao');
+
+        function atualizarCampos() {
+            if (!statusSelect) return;
+            
+            if (statusSelect.value === 'Pendente') {
+                divMotivo.style.display = 'block';
+                divSolucao.style.display = 'none';
+            } else if (statusSelect.value === 'Concluído') {
+                divSolucao.style.display = 'block';
+                divMotivo.style.display = 'none';
+            } else {
+                divMotivo.style.display = 'none';
+                divSolucao.style.display = 'none';
+            }
+        }
+
+        if (statusSelect) {
+            statusSelect.addEventListener('change', atualizarCampos);
+            atualizarCampos(); 
+        }
+    });
+</script>
+{% endblock %}

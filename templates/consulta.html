@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="list-container">
+    <h2>Fila de Tickets</h2>
+
+    <button type="button" class="accordion-btn" id="toggleSearchBtn">
+        <span>🔍 Pesquisa e Filtros</span>
+        <span id="accordion-icon">▼</span>
+    </button>
+
+    <div class="accordion-wrapper" id="searchWrapper">
+        <div class="accordion-inner">
+            <form method="GET" action="/consulta" class="search-form-clean">
+                <div class="search-row">
+                    <input type="text" name="search" placeholder="Pesquisar N° do ticket, solicitante ou assunto..." value="{{ request.args.get('search', '') }}">
+                    <button type="submit" class="btn-search">Buscar</button>
+                </div>
+                
+                <div class="filter-row">
+                    <select name="status">
+                        <option value="">Todos os Status</option>
+                        <option value="Aberto" {% if request.args.get('status') == 'Aberto' %}selected{% endif %}>Aberto</option>
+                        <option value="Em andamento" {% if request.args.get('status') == 'Em andamento' %}selected{% endif %}>Em andamento</option>
+                        <option value="Pendente" {% if request.args.get('status') == 'Pendente' %}selected{% endif %}>Pendente</option>
+                        <option value="Concluído" {% if request.args.get('status') == 'Concluído' %}selected{% endif %}>Concluído</option>
+                    </select>
+
+                    <select name="prioridade">
+                        <option value="">Qualquer Prioridade</option>
+                        <option value="Baixa" {% if request.args.get('prioridade') == 'Baixa' %}selected{% endif %}>Baixa</option>
+                        <option value="Média" {% if request.args.get('prioridade') == 'Média' %}selected{% endif %}>Média</option>
+                        <option value="Alta" {% if request.args.get('prioridade') == 'Alta' %}selected{% endif %}>Alta</option>
+                        <option value="Crítica" {% if request.args.get('prioridade') == 'Crítica' %}selected{% endif %}>Crítica</option>
+                    </select>
+
+                    <select name="tecnico">
+                        <option value="">Todos os Técnicos</option>
+                        {% for tec in tecnicos %}
+                        <option value="{{ tec }}" {% if request.args.get('tecnico') == tec %}selected{% endif %}>{{ tec }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Ticket</th>
+                <th>Solicitante / Setor</th>
+                <th>Assunto</th>
+                <th>Status</th>
+                <th>Técnico</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in chamados %}
+            <tr>
+                <td data-label="Ticket">
+                    <strong>#{{ item.id }}</strong><br>
+                    <small>{{ item.data_abertura.strftime('%d/%m/%y %H:%M') }}</small>
+                </td>
+                
+                <td data-label="Solicitante">
+                    <strong>{{ item.solicitante }}</strong><br>
+                    {{ item.setor }}
+                </td>
+
+                <td data-label="Assunto">
+                    <strong>{{ item.assunto }}</strong><br>
+                    <span class="badge">{{ item.tipo }}</span>
+                    <span class="badge" style="
+                        {% if item.prioridade == 'Alta' %} background-color: #e74c3c; 
+                        {% elif item.prioridade == 'Crítica' %} background-color: #c0392b; 
+                        {% else %} background-color: #34495e; {% endif %}">
+                        {{ item.prioridade }}
+                    </span>
+                    <br>
+                    <button class="btn-modal-open" 
+                            data-id="{{ item.id }}"
+                            data-desc="{{ item.descricao }}" 
+                            data-solucao="{{ item.solucao_aplicada or '' }}"
+                            data-motivo="{{ item.motivo_pendencia or '' }}">
+                        Ler detalhes
+                    </button>
+                </td>
+                
+                <td data-label="Status">
+                    <span style="font-weight: bold;
+                        {% if item.status == 'Concluído' %} color: #27ae60;
+                        {% elif item.status == 'Pendente' %} color: #e67e22;
+                        {% elif item.status == 'Aberto' %} color: #c0392b;
+                        {% else %} color: #2980b9; {% endif %}">
+                        {{ item.status }}
+                    </span>
+                </td>
+
+                <td data-label="Técnico">
+                    <strong>{{ item.tecnico or 'Sem Atribuição' }}</strong><br>
+                    <a href="/editar/{{ item.id }}" class="btn-edit" style="text-decoration: none; margin-top: 5px; display: inline-block;">✏️ Atualizar</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center;">Nenhum ticket encontrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="textModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3 id="modal-title">Detalhes do Ticket</h3>
+        <p id="modal-text"></p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById("textModal");
+        const modalTitle = document.getElementById("modal-title");
+        const modalText = document.getElementById("modal-text");
+        const closeBtn = document.querySelector(".close-modal");
+        const openBtns = document.querySelectorAll(".btn-modal-open");
+
+        if (openBtns.length > 0) {
+            openBtns.forEach(btn => {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    
+                    const id = this.getAttribute("data-id");
+                    const desc = this.getAttribute("data-desc");
+                    const solucao = this.getAttribute("data-solucao");
+                    const motivo = this.getAttribute("data-motivo");
+                    
+                    modalTitle.textContent = `Ticket #${id}`;
+                    
+                    let conteudoModal = `<strong>Descrição do Problema:</strong><br>${desc}`;
+                    
+                    if (motivo) {
+                        conteudoModal += `<hr style="margin: 15px 0; border-top: 1px solid var(--border-color);"><div style="color: #e67e22;"><strong>Pendência:</strong><br>${motivo}</div>`;
+                    }
+                    
+                    if (solucao) {
+                        conteudoModal += `<hr style="margin: 15px 0; border-top: 1px solid var(--border-color);"><div style="color: #27ae60;"><strong>Solução:</strong><br>${solucao}</div>`;
+                    }
+                    
+                    modalText.innerHTML = conteudoModal;
+                    modal.style.display = "block";
+                });
+            });
+            
+            if (closeBtn) closeBtn.onclick = () => modal.style.display = "none";
+            window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; }
+        }
+        
+        const toggleBtn = document.getElementById('toggleSearchBtn');
+        const wrapper = document.getElementById('searchWrapper');
+        const icon = document.getElementById('accordion-icon');
+
+        if (toggleBtn && wrapper && icon) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasFilters = Array.from(urlParams.keys()).length > 0;
+
+            if (hasFilters) {
+                wrapper.classList.add('open');
+                icon.textContent = '▲';
+            } else if (window.innerWidth > 768) {
+                wrapper.classList.add('open');
+                icon.textContent = '▲';
+            }
+
+            toggleBtn.addEventListener('click', () => {
+                wrapper.classList.toggle('open');
+                icon.textContent = wrapper.classList.contains('open') ? '▲' : '▼';
+            });
+        }
+    });
+</script>
+{% endblock %}
