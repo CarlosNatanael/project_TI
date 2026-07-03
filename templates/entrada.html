@@ -3,36 +3,35 @@
 {% block content %}
 <div class="form-container">
     <h2>{% if ticket %}Tratar Ticket #{{ ticket.id }}{% else %}Abrir Novo Ticket{% endif %}</h2>
-    <form method="POST">
+    <form method="POST" id="ticketForm">
         
         <div class="form-group">
             <label>Solicitante:</label>
-            <input type="text" name="solicitante" required placeholder="Ex: João da Silva" value="{{ ticket.solicitante if ticket else '' }}" {% if ticket %}readonly{% endif %}>
+            <input type="text" name="solicitante" required placeholder="Ex: João da Silva" value="{{ ticket.solicitante if ticket else '' }}" class="campo-dinamico">
         </div>
 
         <div class="form-group">
             <label>Setor/Área:</label>
-            <input type="text" name="setor" required placeholder="Ex: Financeiro, RH, Logística" value="{{ ticket.setor if ticket else '' }}" {% if ticket %}readonly{% endif %}>
+            <input type="text" name="setor" required placeholder="Ex: Financeiro, RH, Logística" value="{{ ticket.setor if ticket else '' }}" class="campo-dinamico">
         </div>
 
         <div class="form-group">
             <label>Assunto (Resumo):</label>
-            <input type="text" name="assunto" required placeholder="Ex: Impressora sem conexão" value="{{ ticket.assunto if ticket else '' }}" {% if ticket %}readonly{% endif %}>
+            <input type="text" name="assunto" required placeholder="Ex: Impressora sem conexão" value="{{ ticket.assunto if ticket else '' }}" class="campo-dinamico">
         </div>
 
         <div class="form-group">
             <label>Tipo:</label>
-            <select name="tipo" required {% if ticket %}disabled{% endif %}>
+            <select name="tipo" required class="campo-dinamico">
                 <option value="" disabled {% if not ticket %}selected{% endif %}>Selecione o tipo...</option>
                 <option value="Incidente" {% if ticket and ticket.tipo == 'Incidente' %}selected{% endif %}>Incidente (Falha/Erro em algo existente)</option>
                 <option value="Requisição" {% if ticket and ticket.tipo == 'Requisição' %}selected{% endif %}>Requisição (Pedido de novo acesso/equipamento)</option>
             </select>
-            {% if ticket %}<input type="hidden" name="tipo" value="{{ ticket.tipo }}">{% endif %}
         </div>
 
         <div class="form-group">
             <label>Prioridade:</label>
-            <select name="prioridade" required>
+            <select name="prioridade" required class="campo-dinamico">
                 <option value="Baixa" {% if ticket and ticket.prioridade == 'Baixa' %}selected{% endif %}>Baixa</option>
                 <option value="Média" {% if not ticket or (ticket and ticket.prioridade == 'Média') %}selected{% endif %}>Média</option>
                 <option value="Alta" {% if ticket and ticket.prioridade == 'Alta' %}selected{% endif %}>Alta</option>
@@ -42,7 +41,7 @@
 
         <div class="form-group">
             <label>Descrição do Problema/Pedido:</label>
-            <textarea name="descricao" rows="4" required {% if ticket %}readonly{% endif %}>{{ ticket.descricao if ticket else '' }}</textarea>
+            <textarea name="descricao" rows="4" required class="campo-dinamico">{{ ticket.descricao if ticket else '' }}</textarea>
         </div>
 
         {% if ticket %}
@@ -66,21 +65,22 @@
 
             <div class="form-group" id="div_motivo" style="display: none; background: rgba(230, 126, 34, 0.1); padding: 10px; border-left: 4px solid #e67e22;">
                 <label>Motivo da Pendência:</label>
-                <textarea name="motivo_pendencia" id="motivo_pendencia" rows="2">{{ ticket.motivo_pendencia or '' }}</textarea>
+                <textarea name="motivo_pendencia" id="motivo_pendencia" rows="2" class="campo-dinamico">{{ ticket.motivo_pendencia or '' }}</textarea>
             </div>
 
             <div class="form-group" id="div_solucao" style="display: none; background: rgba(39, 174, 96, 0.1); padding: 10px; border-left: 4px solid #27ae60;">
                 <label>Solução Aplicada:</label>
-                <textarea name="solucao_aplicada" id="solucao_aplicada" rows="3">{{ ticket.solucao_aplicada or '' }}</textarea>
+                <textarea name="solucao_aplicada" id="solucao_aplicada" rows="3" class="campo-dinamico">{{ ticket.solucao_aplicada or '' }}</textarea>
             </div>
         {% endif %}
 
-        <div class="botoes-container">
+        <div class="botoes-container" style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="submit" class="btn-submit">
                 {% if ticket %}Salvar Atendimento{% else %}Abrir Ticket{% endif %}
             </button>
             {% if ticket %}
-                <a href="/consulta" class="btn-back">Voltar</a>
+                <a href="/consulta" class="btn-back" style="text-align: center;">Voltar</a>
+                <a href="/excluir/{{ ticket.id }}" class="btn-submit" style="background-color: #e74c3c; text-decoration: none; text-align: center;" onclick="return confirm('Tem certeza que deseja EXCLUIR DEFINITIVAMENTE este ticket?');"> Excluir Ticket</a>
             {% endif %}
         </div>
     </form>
@@ -91,25 +91,49 @@
         const statusSelect = document.getElementById('status_select');
         const divMotivo = document.getElementById('div_motivo');
         const divSolucao = document.getElementById('div_solucao');
+        const camposDinamicos = document.querySelectorAll('.campo-dinamico');
 
         function atualizarCampos() {
             if (!statusSelect) return;
             
-            if (statusSelect.value === 'Pendente') {
+            const statusAtual = statusSelect.value;
+            const isConcluido = (statusAtual === 'Concluído');
+
+            if (statusAtual === 'Pendente') {
                 divMotivo.style.display = 'block';
                 divSolucao.style.display = 'none';
-            } else if (statusSelect.value === 'Concluído') {
+            } else if (statusAtual === 'Concluído') {
                 divSolucao.style.display = 'block';
                 divMotivo.style.display = 'none';
             } else {
                 divMotivo.style.display = 'none';
                 divSolucao.style.display = 'none';
             }
+
+            camposDinamicos.forEach(campo => {
+                if (isConcluido) {
+                    if (campo.tagName === 'SELECT') {
+                        campo.style.pointerEvents = 'none';
+                        campo.style.backgroundColor = 'var(--table-header-bg)';
+                    } else {
+                        campo.setAttribute('readonly', 'true');
+                        campo.style.backgroundColor = 'var(--table-header-bg)';
+                    }
+                } else {
+                    if (campo.tagName === 'SELECT') {
+                        campo.style.pointerEvents = 'auto';
+                        campo.style.backgroundColor = '';
+                    } else {
+                        campo.removeAttribute('readonly');
+                        campo.style.backgroundColor = '';
+                    }
+                }
+            });
         }
 
         if (statusSelect) {
             statusSelect.addEventListener('change', atualizarCampos);
-            atualizarCampos(); 
+            atualizarCampos();
         }
     });
 </script>

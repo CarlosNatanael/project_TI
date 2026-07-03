@@ -138,13 +138,19 @@ def entrada():
 @app.route('/editar/<int:id>', methods=['GET', 'POST'])
 def editar(id):
     ticket = Ticket.query.get_or_404(id)
+    
     if request.method == 'POST':
+        ticket.solicitante = request.form.get('solicitante', ticket.solicitante)
+        ticket.setor = request.form.get('setor', ticket.setor)
+        ticket.assunto = request.form.get('assunto', ticket.assunto)
+        ticket.tipo = request.form.get('tipo', ticket.tipo)
+        ticket.descricao = request.form.get('descricao', ticket.descricao)
         ticket.tecnico = request.form.get('tecnico', ticket.tecnico)
         ticket.status = request.form.get('status', ticket.status)
         ticket.prioridade = request.form.get('prioridade', ticket.prioridade)
         ticket.motivo_pendencia = request.form.get('motivo_pendencia', '')
         ticket.solucao_aplicada = request.form.get('solucao_aplicada', '')
-        
+
         if ticket.status == 'Concluído' and not ticket.data_fechamento:
             ticket.data_fechamento = get_hora_brasil()
         elif ticket.status != 'Concluído':
@@ -153,8 +159,7 @@ def editar(id):
         db.session.commit()
         return redirect('/consulta')
     
-    tecnicos = ["Lucas"]
-    return render_template('entrada.html', ticket=ticket, tecnicos=tecnicos)
+    return render_template('entrada.html', ticket=ticket)
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")
