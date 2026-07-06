@@ -65,12 +65,12 @@
 
             <div class="form-group" id="div_motivo" style="display: none; background: rgba(230, 126, 34, 0.1); padding: 10px; border-left: 4px solid #e67e22;">
                 <label>Motivo da Pendência:</label>
-                <textarea name="motivo_pendencia" id="motivo_pendencia" rows="2" class="campo-dinamico">{{ ticket.motivo_pendencia or '' }}</textarea>
+                <textarea name="motivo_pendencia" id="motivo_pendencia" rows="2">{{ ticket.motivo_pendencia or '' }}</textarea>
             </div>
 
             <div class="form-group" id="div_solucao" style="display: none; background: rgba(39, 174, 96, 0.1); padding: 10px; border-left: 4px solid #27ae60;">
                 <label>Solução Aplicada:</label>
-                <textarea name="solucao_aplicada" id="solucao_aplicada" rows="3" class="campo-dinamico">{{ ticket.solucao_aplicada or '' }}</textarea>
+                <textarea name="solucao_aplicada" id="solucao_aplicada" rows="3">{{ ticket.solucao_aplicada or '' }}</textarea>
             </div>
         {% endif %}
 
