@@ -40,6 +40,12 @@
         </div>
 
         <div class="form-group">
+            <label>Tags / Etiquetas:</label>
+            <input type="text" name="tags" placeholder="Ex: e-mail, rede, hardware" value="{{ ticket.tags if ticket else '' }}" class="campo-dinamico">
+            <small style="color: #888;">Separe as tags usando vírgulas.</small>
+        </div>
+
+        <div class="form-group">
             <label>Descrição do Problema/Pedido:</label>
             <textarea name="descricao" rows="4" required class="campo-dinamico">{{ ticket.descricao if ticket else '' }}</textarea>
         </div>

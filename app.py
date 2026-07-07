@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, make_response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from sqlalchemy import func
 import zoneinfo
 import csv
 import io
@@ -22,6 +23,7 @@ class Ticket(db.Model):
     prioridade = db.Column(db.String(20), default='Média') 
     tecnico = db.Column(db.String(50), default='Lucas')
     status = db.Column(db.String(20), default='Aberto') 
+    tags = db.Column(db.String(200), default='')
     motivo_pendencia = db.Column(db.Text)
     solucao_aplicada = db.Column(db.Text)
     data_abertura = db.Column(db.DateTime, default=get_hora_brasil)
@@ -32,34 +34,40 @@ with app.app_context():
 
 @app.route('/dashboard')
 def dashboard():
-    # Métricas gerais de status
     total_tickets = Ticket.query.count()
     abertos = Ticket.query.filter_by(status='Aberto').count()
     em_andamento = Ticket.query.filter_by(status='Em andamento').count()
     pendentes = Ticket.query.filter_by(status='Pendente').count()
     concluidos = Ticket.query.filter_by(status='Concluído').count()
     
-    # Métricas por Tipo
     incidentes = Ticket.query.filter_by(tipo='Incidente').count()
     requisicoes = Ticket.query.filter_by(tipo='Requisição').count()
-    
     ativos_criticos = Ticket.query.filter(Ticket.prioridade.in_(['Alta', 'Crítica']), Ticket.status != 'Concluído').count()
+
+    setor_data = db.session.query(Ticket.setor, func.count(Ticket.id)).group_by(Ticket.setor).all()
+    labels_setor = [s[0] for s in setor_data]
+    valores_setor = [s[1] for s in setor_data]
+    
+    assunto_data = db.session.query(Ticket.assunto, func.count(Ticket.id)).group_by(Ticket.assunto).all()
+    labels_assunto = [a[0] for a in assunto_data]
+    valores_assunto = [a[1] for a in assunto_data]
 
     return render_template('dashboard.html', 
                            total=total_tickets, abertos=abertos, em_andamento=em_andamento,
                            pendentes=pendentes, concluidos=concluidos, 
                            incidentes=incidentes, requisicoes=requisicoes,
-                           criticos=ativos_criticos)
+                           criticos=ativos_criticos,
+                           labels_setor=labels_setor, valores_setor=valores_setor,
+                           labels_assunto=labels_assunto, valores_assunto=valores_assunto)
 
 @app.route('/exportar')
 def exportar():
     tickets = Ticket.query.order_by(Ticket.id.desc()).all()
-    
     output_buffer = io.StringIO()
     writer = csv.writer(output_buffer, delimiter=';')
 
     writer.writerow([
-        'Número Ticket', 'Solicitante', 'Setor', 'Assunto', 
+        'Número Ticket', 'Solicitante', 'Setor', 'Assunto', 'Tags',
         'Tipo', 'Prioridade', 'Status', 'Técnico', 
         'Data Abertura', 'Data Fechamento', 'Motivo Pendência', 'Solução Aplicada'
     ])
@@ -67,15 +75,13 @@ def exportar():
     for t in tickets:
         abertura = t.data_abertura.strftime('%d/%m/%Y %H:%M') if t.data_abertura else ''
         fechamento = t.data_fechamento.strftime('%d/%m/%Y %H:%M') if t.data_fechamento else ''
-        
         writer.writerow([
-            f"#{t.id}", t.solicitante, t.setor, t.assunto,
+            f"#{t.id}", t.solicitante, t.setor, t.assunto, t.tags,
             t.tipo, t.prioridade, t.status, t.tecnico or 'Não Atribuído',
             abertura, fechamento, t.motivo_pendencia or '', t.solucao_aplicada or ''
         ])
     
     response_data = output_buffer.getvalue().encode('utf-8-sig')
-    
     response = make_response(response_data)
     response.headers["Content-Disposition"] = "attachment; filename=relatorio_tickets_ti.csv"
     response.headers["Content-type"] = "text/csv; charset=utf-8"
@@ -94,6 +100,7 @@ def consulta():
     status_filtro = request.args.get('status', '')
     tecnico_filtro = request.args.get('tecnico', '')
     prioridade_filtro = request.args.get('prioridade', '')
+    tag_filtro = request.args.get('tag', '')
 
     query = Ticket.query
 
@@ -101,7 +108,8 @@ def consulta():
         query = query.filter(
             (Ticket.solicitante.contains(search)) | 
             (Ticket.assunto.contains(search)) |
-            (Ticket.id == search if search.isdigit() else False)
+            (Ticket.id == search if search.isdigit() else False) |
+            (Ticket.tags.contains(search))
         )
 
     if status_filtro:
@@ -110,12 +118,14 @@ def consulta():
         query = query.filter(Ticket.tecnico == tecnico_filtro)
     if prioridade_filtro:
         query = query.filter(Ticket.prioridade == prioridade_filtro)
+    if tag_filtro:
+        query = query.filter(Ticket.tags.contains(tag_filtro))
 
     query = query.order_by(Ticket.status == 'Concluído', Ticket.data_abertura.desc())
     resultados = query.all()
     tecnicos = ["Lucas"]
     
-    return render_template('consulta.html', chamados=resultados, tecnicos=tecnicos)
+    return render_template('consulta.html', chamados=resultados, tecnicos=tecnicos, tag_ativa=tag_filtro)
 
 @app.route('/', methods=['GET', 'POST'])
 def entrada():
@@ -126,6 +136,7 @@ def entrada():
             assunto=request.form['assunto'],
             descricao=request.form['descricao'],
             tipo=request.form['tipo'],
+            tags=request.form.get('tags', ''),
             prioridade=request.form.get('prioridade', 'Média'),
             status='Aberto'
         )
@@ -145,6 +156,7 @@ def editar(id):
         ticket.assunto = request.form.get('assunto', ticket.assunto)
         ticket.tipo = request.form.get('tipo', ticket.tipo)
         ticket.descricao = request.form.get('descricao', ticket.descricao)
+        ticket.tags = request.form.get('tags', ticket.tags)
         ticket.tecnico = request.form.get('tecnico', ticket.tecnico)
         ticket.status = request.form.get('status', ticket.status)
         ticket.prioridade = request.form.get('prioridade', ticket.prioridade)
