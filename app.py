@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, make_response
 from flask_sqlalchemy import SQLAlchemy
+from collections import Counter
 from datetime import datetime
 from sqlalchemy import func
 import zoneinfo
@@ -47,10 +48,18 @@ def dashboard():
     setor_data = db.session.query(Ticket.setor, func.count(Ticket.id)).group_by(Ticket.setor).all()
     labels_setor = [s[0] for s in setor_data]
     valores_setor = [s[1] for s in setor_data]
+
+    todos_tickets = Ticket.query.with_entities(Ticket.tags).all()
+    contador_tags = Counter()
     
-    assunto_data = db.session.query(Ticket.assunto, func.count(Ticket.id)).group_by(Ticket.assunto).all()
-    labels_assunto = [a[0] for a in assunto_data]
-    valores_assunto = [a[1] for a in assunto_data]
+    for t in todos_tickets:
+        if t.tags:
+            tags_lista = [tag.strip() for tag in t.tags.split(',') if tag.strip()]
+            contador_tags.update(tags_lista)
+
+    tags_comuns = contador_tags.most_common(10)
+    labels_tags = [t[0] for t in tags_comuns]
+    valores_tags = [t[1] for t in tags_comuns]
 
     return render_template('dashboard.html', 
                            total=total_tickets, abertos=abertos, em_andamento=em_andamento,
@@ -58,7 +67,7 @@ def dashboard():
                            incidentes=incidentes, requisicoes=requisicoes,
                            criticos=ativos_criticos,
                            labels_setor=labels_setor, valores_setor=valores_setor,
-                           labels_assunto=labels_assunto, valores_assunto=valores_assunto)
+                           labels_tags=labels_tags, valores_tags=valores_tags)
 
 @app.route('/exportar')
 def exportar():

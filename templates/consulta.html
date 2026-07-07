@@ -69,31 +69,32 @@
                 </td>
 
                 <td data-label="Assunto">
-                    <strong>{{ item.assunto }}</strong><br>
-                    <span class="badge">{{ item.tipo }}</span>
-                    <span class="badge" style="
-                        {% if item.prioridade == 'Baixa' %} background-color: #27ae60; color: white;
-                        {% elif item.prioridade == 'Média' %} background-color: #f1c40f; color: black;
-                        {% elif item.prioridade == 'Alta' %} background-color: #e67e22; color: white;
-                        {% elif item.prioridade == 'Crítica' %} background-color: #c0392b; color: white;
-                        {% else %} background-color: #34495e; color: white; {% endif %}">
-                        {{ item.prioridade }}
-                    </span>
+                    <strong style="display: block; margin-bottom: 5px;">{{ item.assunto }}</strong>
                     
-                    {% if item.tags %}
-                        <div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px;">
-                        {% for tag in item.tags.split(',') %}
-                            {% if tag.strip() %}
-                                <a href="/consulta?tag={{ tag.strip() }}" class="badge" style="background-color: #8e44ad; text-decoration: none; cursor: pointer; border: 1px solid #732d91;">
-                                    <i class="bi bi-tag-fill"></i> {{ tag.strip() }}
-                                </a>
-                            {% endif %}
-                        {% endfor %}
-                        </div>
-                    {% endif %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; align-items: center;">
+                        <span class="badge" style="margin-bottom: 0;">{{ item.tipo }}</span>
+                        
+                        <span class="badge" style="margin-bottom: 0;
+                            {% if item.prioridade == 'Baixa' %} background-color: #27ae60; color: white;
+                            {% elif item.prioridade == 'Média' %} background-color: #f1c40f; color: black;
+                            {% elif item.prioridade == 'Alta' %} background-color: #e67e22; color: white;
+                            {% elif item.prioridade == 'Crítica' %} background-color: #c0392b; color: white;
+                            {% else %} background-color: #34495e; color: white; {% endif %}">
+                            {{ item.prioridade }}
+                        </span>
+                        
+                        {% if item.tags %}
+                            {% for tag in item.tags.split(',') %}
+                                {% if tag.strip() %}
+                                    <a href="/consulta?tag={{ tag.strip() }}" class="badge" style="margin-bottom: 0; background-color: #8e44ad; text-decoration: none; cursor: pointer; border: 1px solid #732d91;">
+                                        <i class="bi bi-tag-fill"></i> {{ tag.strip() }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>
                     
-                    <br>
-                    <button class="btn-modal-open" 
+                    <button class="btn-modal-open" style="margin-top: 8px;"
                             data-id="{{ item.id }}"
                             data-desc="{{ item.descricao }}" 
                             data-solucao="{{ item.solucao_aplicada or '' }}"

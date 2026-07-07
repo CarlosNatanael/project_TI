@@ -41,24 +41,23 @@
         </div>
 
         <div style="flex: 1; min-width: 300px; background: var(--card-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px;">
-            <h3 style="font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Volume por Assunto</h3>
-            <canvas id="graficoAssunto" style="max-height: 300px;"></canvas>
+            <h3 style="font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Volume por Assunto/Tag</h3>
+            <canvas id="graficoTag" style="max-height: 300px;"></canvas>
         </div>
     </div>
 </div>
 
 <script>
-    // Configurações do Chart.js para pegar as cores do seu CSS/Tema
     Chart.defaults.color = '#888';
 
-    // Gráfico de Setores (Barras)
+    // Gráfico de Setores
     const ctxSetor = document.getElementById('graficoSetor').getContext('2d');
     new Chart(ctxSetor, {
         type: 'bar',
         data: {
             labels: {{ labels_setor | tojson }},
             datasets: [{
-                label: 'Quantidade de Chamados',
+                label: 'Quantidade',
                 data: {{ valores_setor | tojson }},
                 backgroundColor: '#3498db',
                 borderRadius: 4
@@ -71,16 +70,17 @@
         }
     });
 
-    // Gráfico de Assuntos (Doughnut)
-    const ctxAssunto = document.getElementById('graficoAssunto').getContext('2d');
-    new Chart(ctxAssunto, {
+    // Gráfico de Tags
+    const ctxTag = document.getElementById('graficoTag').getContext('2d');
+    new Chart(ctxTag, {
         type: 'doughnut',
         data: {
-            labels: {{ labels_assunto | tojson }},
+            labels: {{ labels_tags | tojson }},
             datasets: [{
-                data: {{ valores_assunto | tojson }},
+                data: {{ valores_tags | tojson }},
                 backgroundColor: [
-                    '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#34495e', '#1abc9c'
+                    '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#34495e', 
+                    '#1abc9c', '#e67e22', '#3498db', '#95a5a6', '#d35400'
                 ],
                 borderWidth: 1
             }]
