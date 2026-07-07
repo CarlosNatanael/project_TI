@@ -61,7 +61,7 @@ def excluir_tag(id):
     db.session.commit()
     return redirect('/tags')
 
-@app.route('/dashboard')
+@app.route('/')
 def dashboard():
     total_tickets = Ticket.query.count()
     abertos = Ticket.query.filter_by(status='Aberto').count()
@@ -152,7 +152,7 @@ def consulta():
     
     return render_template('consulta.html', chamados=resultados, cores_tags=cores_tags, tag_ativa=tag_filtro)
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/novo', methods=['GET', 'POST'])
 def entrada():
     if request.method == 'POST':
         tags_selecionadas = ','.join(request.form.getlist('tags'))
@@ -203,4 +203,4 @@ def editar(id):
     return render_template('entrada.html', ticket=ticket, tags_disponiveis=tags_disponiveis, tags_ativas=tags_ativas)
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=False, host="0.0.0.0")
