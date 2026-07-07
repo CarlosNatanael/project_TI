@@ -78,10 +78,7 @@
             labels: {{ labels_tags | tojson }},
             datasets: [{
                 data: {{ valores_tags | tojson }},
-                backgroundColor: [
-                    '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#34495e', 
-                    '#1abc9c', '#e67e22', '#3498db', '#95a5a6', '#d35400'
-                ],
+                backgroundColor: {{ cores_grafico | tojson }}, /* <--- A mágica acontece aqui */
                 borderWidth: 1
             }]
         },

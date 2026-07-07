@@ -41,8 +41,18 @@
 
         <div class="form-group">
             <label>Tags / Etiquetas:</label>
-            <input type="text" name="tags" placeholder="Ex: e-mail, rede, hardware" value="{{ ticket.tags if ticket else '' }}" class="campo-dinamico">
-            <small style="color: #888;">Separe as tags usando vírgulas.</small>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px;">
+                {% for t in tags_disponiveis %}
+                    <label class="checkbox-toggle" style="border-left: 4px solid {{ t.cor }};">
+                        <input type="checkbox" name="tags" value="{{ t.nome }}" class="campo-dinamico"
+                               {% if tags_ativas and t.nome in tags_ativas %}checked{% endif %}>
+                        <span style="font-weight: bold;"><i class="bi bi-tag-fill" style="color: {{ t.cor }};"></i> {{ t.nome }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            {% if not tags_disponiveis %}
+                <small style="color: #e74c3c;">Nenhuma tag cadastrada. Vá no menu superior em "Etiquetas" para criar as suas.</small>
+            {% endif %}
         </div>
 
         <div class="form-group">
@@ -121,6 +131,8 @@
                     if (campo.tagName === 'SELECT') {
                         campo.style.pointerEvents = 'none';
                         campo.style.backgroundColor = 'var(--table-header-bg)';
+                    } else if (campo.type === 'checkbox') {
+                        campo.disabled = true;
                     } else {
                         campo.setAttribute('readonly', 'true');
                         campo.style.backgroundColor = 'var(--table-header-bg)';
@@ -129,6 +141,8 @@
                     if (campo.tagName === 'SELECT') {
                         campo.style.pointerEvents = 'auto';
                         campo.style.backgroundColor = '';
+                    } else if (campo.type === 'checkbox') {
+                        campo.disabled = false;
                     } else {
                         campo.removeAttribute('readonly');
                         campo.style.backgroundColor = '';

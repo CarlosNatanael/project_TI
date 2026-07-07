@@ -86,7 +86,7 @@
                         {% if item.tags %}
                             {% for tag in item.tags.split(',') %}
                                 {% if tag.strip() %}
-                                    <a href="/consulta?tag={{ tag.strip() }}" class="badge" style="margin-bottom: 0; background-color: #8e44ad; text-decoration: none; cursor: pointer; border: 1px solid #732d91;">
+                                    <a href="/consulta?tag={{ tag.strip() }}" class="badge" style="margin-bottom: 0; background-color: {{ cores_tags.get(tag.strip(), '#8e44ad') }}; text-decoration: none; cursor: pointer;">
                                         <i class="bi bi-tag-fill"></i> {{ tag.strip() }}
                                     </a>
                                 {% endif %}

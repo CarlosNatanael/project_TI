@@ -14,6 +14,11 @@ db = SQLAlchemy(app)
 def get_hora_brasil():
     return datetime.now(zoneinfo.ZoneInfo('America/Sao_Paulo'))
 
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(50), nullable=False, unique=True)
+    cor = db.Column(db.String(20), nullable=False, default='#8e44ad')
+
 class Ticket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     solicitante = db.Column(db.String(100), nullable=False)
@@ -24,7 +29,7 @@ class Ticket(db.Model):
     prioridade = db.Column(db.String(20), default='Média') 
     tecnico = db.Column(db.String(50), default='Lucas')
     status = db.Column(db.String(20), default='Aberto') 
-    tags = db.Column(db.String(200), default='')
+    tags = db.Column(db.String(200), default='') 
     motivo_pendencia = db.Column(db.Text)
     solucao_aplicada = db.Column(db.Text)
     data_abertura = db.Column(db.DateTime, default=get_hora_brasil)
@@ -32,6 +37,29 @@ class Ticket(db.Model):
 
 with app.app_context():
     db.create_all()
+
+@app.route('/tags', methods=['GET', 'POST'])
+def gerenciar_tags():
+    if request.method == 'POST':
+        nome = request.form.get('nome').strip()
+        cor = request.form.get('cor')
+        if nome:
+            existe = Tag.query.filter_by(nome=nome).first()
+            if not existe:
+                nova_tag = Tag(nome=nome, cor=cor)
+                db.session.add(nova_tag)
+                db.session.commit()
+        return redirect('/tags')
+    
+    tags = Tag.query.all()
+    return render_template('tags.html', tags=tags)
+
+@app.route('/tags/excluir/<int:id>')
+def excluir_tag(id):
+    tag = Tag.query.get_or_404(id)
+    db.session.delete(tag)
+    db.session.commit()
+    return redirect('/tags')
 
 @app.route('/dashboard')
 def dashboard():
@@ -48,7 +76,7 @@ def dashboard():
     setor_data = db.session.query(Ticket.setor, func.count(Ticket.id)).group_by(Ticket.setor).all()
     labels_setor = [s[0] for s in setor_data]
     valores_setor = [s[1] for s in setor_data]
-
+    
     todos_tickets = Ticket.query.with_entities(Ticket.tags).all()
     contador_tags = Counter()
     
@@ -56,10 +84,13 @@ def dashboard():
         if t.tags:
             tags_lista = [tag.strip() for tag in t.tags.split(',') if tag.strip()]
             contador_tags.update(tags_lista)
-
+    
     tags_comuns = contador_tags.most_common(10)
     labels_tags = [t[0] for t in tags_comuns]
     valores_tags = [t[1] for t in tags_comuns]
+
+    cores_banco = {t.nome: t.cor for t in Tag.query.all()}
+    cores_grafico = [cores_banco.get(tag, '#3498db') for tag in labels_tags]
 
     return render_template('dashboard.html', 
                            total=total_tickets, abertos=abertos, em_andamento=em_andamento,
@@ -67,7 +98,8 @@ def dashboard():
                            incidentes=incidentes, requisicoes=requisicoes,
                            criticos=ativos_criticos,
                            labels_setor=labels_setor, valores_setor=valores_setor,
-                           labels_tags=labels_tags, valores_tags=valores_tags)
+                           labels_tags=labels_tags, valores_tags=valores_tags,
+                           cores_grafico=cores_grafico)
 
 @app.route('/exportar')
 def exportar():
@@ -75,20 +107,12 @@ def exportar():
     output_buffer = io.StringIO()
     writer = csv.writer(output_buffer, delimiter=';')
 
-    writer.writerow([
-        'Número Ticket', 'Solicitante', 'Setor', 'Assunto', 'Tags',
-        'Tipo', 'Prioridade', 'Status', 'Técnico', 
-        'Data Abertura', 'Data Fechamento', 'Motivo Pendência', 'Solução Aplicada'
-    ])
+    writer.writerow(['Número Ticket', 'Solicitante', 'Setor', 'Assunto', 'Tags', 'Tipo', 'Prioridade', 'Status', 'Técnico', 'Data Abertura', 'Data Fechamento', 'Motivo Pendência', 'Solução Aplicada'])
     
     for t in tickets:
         abertura = t.data_abertura.strftime('%d/%m/%Y %H:%M') if t.data_abertura else ''
         fechamento = t.data_fechamento.strftime('%d/%m/%Y %H:%M') if t.data_fechamento else ''
-        writer.writerow([
-            f"#{t.id}", t.solicitante, t.setor, t.assunto, t.tags,
-            t.tipo, t.prioridade, t.status, t.tecnico or 'Não Atribuído',
-            abertura, fechamento, t.motivo_pendencia or '', t.solucao_aplicada or ''
-        ])
+        writer.writerow([f"#{t.id}", t.solicitante, t.setor, t.assunto, t.tags, t.tipo, t.prioridade, t.status, t.tecnico or 'Não Atribuído', abertura, fechamento, t.motivo_pendencia or '', t.solucao_aplicada or ''])
     
     response_data = output_buffer.getvalue().encode('utf-8-sig')
     response = make_response(response_data)
@@ -107,24 +131,15 @@ def excluir(id):
 def consulta():
     search = request.args.get('search', '')
     status_filtro = request.args.get('status', '')
-    tecnico_filtro = request.args.get('tecnico', '')
     prioridade_filtro = request.args.get('prioridade', '')
     tag_filtro = request.args.get('tag', '')
 
     query = Ticket.query
 
     if search:
-        query = query.filter(
-            (Ticket.solicitante.contains(search)) | 
-            (Ticket.assunto.contains(search)) |
-            (Ticket.id == search if search.isdigit() else False) |
-            (Ticket.tags.contains(search))
-        )
-
+        query = query.filter((Ticket.solicitante.contains(search)) | (Ticket.assunto.contains(search)) | (Ticket.id == search if search.isdigit() else False) | (Ticket.tags.contains(search)))
     if status_filtro:
         query = query.filter(Ticket.status == status_filtro)
-    if tecnico_filtro:
-        query = query.filter(Ticket.tecnico == tecnico_filtro)
     if prioridade_filtro:
         query = query.filter(Ticket.prioridade == prioridade_filtro)
     if tag_filtro:
@@ -132,20 +147,22 @@ def consulta():
 
     query = query.order_by(Ticket.status == 'Concluído', Ticket.data_abertura.desc())
     resultados = query.all()
-    tecnicos = ["Lucas"]
     
-    return render_template('consulta.html', chamados=resultados, tecnicos=tecnicos, tag_ativa=tag_filtro)
+    cores_tags = {t.nome: t.cor for t in Tag.query.all()}
+    
+    return render_template('consulta.html', chamados=resultados, cores_tags=cores_tags, tag_ativa=tag_filtro)
 
 @app.route('/', methods=['GET', 'POST'])
 def entrada():
     if request.method == 'POST':
+        tags_selecionadas = ','.join(request.form.getlist('tags'))
         novo_ticket = Ticket(
             solicitante=request.form['solicitante'],
             setor=request.form['setor'],
             assunto=request.form['assunto'],
             descricao=request.form['descricao'],
             tipo=request.form['tipo'],
-            tags=request.form.get('tags', ''),
+            tags=tags_selecionadas,
             prioridade=request.form.get('prioridade', 'Média'),
             status='Aberto'
         )
@@ -153,7 +170,8 @@ def entrada():
         db.session.commit()
         return redirect('/consulta')
     
-    return render_template('entrada.html')
+    tags_disponiveis = Tag.query.all()
+    return render_template('entrada.html', tags_disponiveis=tags_disponiveis, tags_ativas=[])
 
 @app.route('/editar/<int:id>', methods=['GET', 'POST'])
 def editar(id):
@@ -165,7 +183,7 @@ def editar(id):
         ticket.assunto = request.form.get('assunto', ticket.assunto)
         ticket.tipo = request.form.get('tipo', ticket.tipo)
         ticket.descricao = request.form.get('descricao', ticket.descricao)
-        ticket.tags = request.form.get('tags', ticket.tags)
+        ticket.tags = ','.join(request.form.getlist('tags'))
         ticket.tecnico = request.form.get('tecnico', ticket.tecnico)
         ticket.status = request.form.get('status', ticket.status)
         ticket.prioridade = request.form.get('prioridade', ticket.prioridade)
@@ -180,7 +198,9 @@ def editar(id):
         db.session.commit()
         return redirect('/consulta')
     
-    return render_template('entrada.html', ticket=ticket)
+    tags_disponiveis = Tag.query.all()
+    tags_ativas = [t.strip() for t in ticket.tags.split(',')] if ticket.tags else []
+    return render_template('entrada.html', ticket=ticket, tags_disponiveis=tags_disponiveis, tags_ativas=tags_ativas)
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")

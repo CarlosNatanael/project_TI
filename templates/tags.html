@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2><i class="bi bi-tags"></i> Gerenciador de Etiquetas</h2>
+    <p style="margin-bottom: 1.5rem; color: #888;">Crie tags personalizadas e defina cores para utilizá-las na abertura de chamados.</p>
+    
+    <form method="POST" action="/tags" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 2rem; background: var(--table-header-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+        <div style="flex: 2; min-width: 200px;">
+            <label>Nome da Tag (Ex: Bimer, Impressora, Dúvida):</label>
+            <input type="text" name="nome" required placeholder="Digite o nome da tag...">
+        </div>
+        <div style="flex: 1; min-width: 100px;">
+            <label>Cor da Etiqueta:</label>
+            <input type="color" name="cor" value="#3498db" style="height: 48px; cursor: pointer; padding: 2px;">
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+            <button type="submit" class="btn-submit" style="width: 100%; height: 48px;">+ Criar Tag</button>
+        </div>
+    </form>
+
+    <hr style="border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+    
+    <h3>Etiquetas Disponíveis</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+        {% for t in tags %}
+            <div class="badge" style="background-color: {{ t.cor }}; display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 0.9rem; border-radius: 20px;">
+                <span><i class="bi bi-tag-fill"></i> {{ t.nome }}</span>
+                <a href="/tags/excluir/{{ t.id }}" onclick="return confirm('Tem certeza que deseja EXCLUIR esta tag? Isso não removerá o nome dela dos tickets antigos, mas ela sumirá da listagem.');" style="color: white; text-decoration: none; font-weight: bold; background: rgba(0,0,0,0.2); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;" title="Excluir Tag">&times;</a>
+            </div>
+        {% else %}
+            <p style="color: #e74c3c; font-style: italic;">Nenhuma tag cadastrada no sistema. Crie a primeira acima!</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
