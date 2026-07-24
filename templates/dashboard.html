@@ -50,7 +50,6 @@
 <script>
     Chart.defaults.color = '#888';
 
-    // Gráfico de Setores
     const ctxSetor = document.getElementById('graficoSetor').getContext('2d');
     new Chart(ctxSetor, {
         type: 'bar',
@@ -66,11 +65,19 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } }
+            plugins: { legend: { display: false } },
+            onClick: (event, elements, chart) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const setorClicado = chart.data.labels[index];
+                    window.location.href = `/consulta?setor=${encodeURIComponent(setorClicado)}`;
+                }
+            },
+            onHover: (event, elements) => {
+                event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+            }
         }
     });
-
-    // Gráfico de Tags
     const ctxTag = document.getElementById('graficoTag').getContext('2d');
     new Chart(ctxTag, {
         type: 'doughnut',
@@ -78,7 +85,7 @@
             labels: {{ labels_tags | tojson }},
             datasets: [{
                 data: {{ valores_tags | tojson }},
-                backgroundColor: {{ cores_grafico | tojson }}, /* <--- A mágica acontece aqui */
+                backgroundColor: {{ cores_grafico | tojson }},
                 borderWidth: 1
             }]
         },
@@ -87,6 +94,16 @@
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'bottom' }
+            },
+            onClick: (event, elements, chart) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const tagClicada = chart.data.labels[index];
+                    window.location.href = `/consulta?tag=${encodeURIComponent(tagClicada)}`;
+                }
+            },
+            onHover: (event, elements) => {
+                event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
             }
         }
     });

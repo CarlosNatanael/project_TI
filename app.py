@@ -7,11 +7,12 @@ from sqlalchemy import func
 from functools import wraps
 import zoneinfo
 import csv
+import os
 import io
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tickets_ti.db'
-app.secret_key = 'mude_para_uma_chave_bem_dificil_e_aleatoria'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'chave_padrao_para_testes')
 
 SENHA_TI = config.SENHA_TI
 db = SQLAlchemy(app)
@@ -172,6 +173,7 @@ def consulta():
     status_filtro = request.args.get('status', '')
     prioridade_filtro = request.args.get('prioridade', '')
     tag_filtro = request.args.get('tag', '')
+    setor_filtro = request.args.get('setor', '')
     
     page = request.args.get('page', 1, type=int)
     query = Ticket.query
@@ -184,10 +186,12 @@ def consulta():
         query = query.filter(Ticket.prioridade == prioridade_filtro)
     if tag_filtro:
         query = query.filter(Ticket.tags.contains(tag_filtro))
+    if setor_filtro:
+        query = query.filter(Ticket.setor == setor_filtro)
 
     query = query.order_by(Ticket.status == 'Concluído', Ticket.data_abertura.desc())
     chamados_paginados = query.paginate(page=page, per_page=15, error_out=False)
-    
+
     cores_tags = {t.nome: t.cor for t in Tag.query.all()}
 
     return render_template('consulta.html', chamados=chamados_paginados, cores_tags=cores_tags, tag_ativa=tag_filtro)
