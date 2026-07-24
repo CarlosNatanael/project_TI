@@ -41,7 +41,11 @@ with app.app_context():
 @app.route('/tags', methods=['GET', 'POST'])
 def gerenciar_tags():
     if request.method == 'POST':
-        nome = request.form.get('nome').strip()
+        nome_raw = request.form.get('nome')
+        if not nome_raw:
+            return redirect('/tags')
+            
+        nome = nome_raw.strip()
         cor = request.form.get('cor')
         if nome:
             existe = Tag.query.filter_by(nome=nome).first()
@@ -54,7 +58,7 @@ def gerenciar_tags():
     tags = Tag.query.all()
     return render_template('tags.html', tags=tags)
 
-@app.route('/tags/excluir/<int:id>')
+@app.route('/tags/excluir/<int:id>', methods=['POST'])
 def excluir_tag(id):
     tag = Tag.query.get_or_404(id)
     db.session.delete(tag)
@@ -120,7 +124,7 @@ def exportar():
     response.headers["Content-type"] = "text/csv; charset=utf-8"
     return response
 
-@app.route('/excluir/<int:id>', methods=['GET', 'POST'])
+@app.route('/excluir/<int:id>', methods=['POST'])
 def excluir(id):
     ticket = Ticket.query.get_or_404(id)
     db.session.delete(ticket)
@@ -184,7 +188,9 @@ def editar(id):
         ticket.tipo = request.form.get('tipo', ticket.tipo)
         ticket.descricao = request.form.get('descricao', ticket.descricao)
         ticket.tags = ','.join(request.form.getlist('tags'))
-        ticket.tecnico = request.form.get('tecnico', ticket.tecnico)
+        novo_tecnico = request.form.get('tecnico')
+        if novo_tecnico and novo_tecnico.strip() != "":
+            ticket.tecnico = novo_tecnico.strip()
         ticket.status = request.form.get('status', ticket.status)
         ticket.prioridade = request.form.get('prioridade', ticket.prioridade)
         ticket.motivo_pendencia = request.form.get('motivo_pendencia', '')
@@ -203,4 +209,4 @@ def editar(id):
     return render_template('entrada.html', ticket=ticket, tags_disponiveis=tags_disponiveis, tags_ativas=tags_ativas)
 
 if __name__ == '__main__':
-    app.run(debug=False, host="0.0.0.0")
+    app.run(debug=False)
