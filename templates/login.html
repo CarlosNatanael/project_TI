@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Suporte TI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: var(--bg-color);">
+    <div class="form-container" style="max-width: 400px; width: 100%; text-align: center;">
+        <h2 style="margin-bottom: 20px;">Acesso Restrito - TI</h2>
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div style="color: #e74c3c; background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #e74c3c;">
+                  {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/login">
+            <div class="form-group" style="text-align: left;">
+                <label>Senha de Acesso:</label>
+                <input type="password" name="senha" required placeholder="Digite a senha da equipe">
+            </div>
+            <button type="submit" class="btn-submit" style="width: 100%;">Entrar no Sistema</button>
+        </form>
+    </div>
+</body>
+</html>

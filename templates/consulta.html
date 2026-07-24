@@ -56,7 +56,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for item in chamados %}
+            {% for item in chamados.items %}
             <tr>
                 <td data-label="Ticket">
                     <strong>#{{ item.id }}</strong><br>
@@ -131,6 +131,21 @@
             {% endfor %}
         </tbody>
     </table>
+<!-- Controles de Paginação -->
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; padding: 15px; background: var(--table-header-bg); border: 1px solid var(--border-color); border-radius: 8px;">
+        
+        {% if chamados.has_prev %}
+            <a href="{{ url_for('consulta', page=chamados.prev_num, search=request.args.get('search', ''), status=request.args.get('status', ''), prioridade=request.args.get('prioridade', ''), tag=request.args.get('tag', '')) }}" style="text-decoration: none; color: var(--accent-color); font-weight: bold; padding: 5px 10px;">&laquo; Anterior</a>
+        {% endif %}
+        
+        <span style="font-weight: bold; color: var(--text-color); font-size: 0.95rem;">
+            Página {{ chamados.page }} de {{ chamados.pages }}
+        </span>
+        
+        {% if chamados.has_next %}
+            <a href="{{ url_for('consulta', page=chamados.next_num, search=request.args.get('search', ''), status=request.args.get('status', ''), prioridade=request.args.get('prioridade', ''), tag=request.args.get('tag', '')) }}" style="text-decoration: none; color: var(--accent-color); font-weight: bold; padding: 5px 10px;">Próxima &raquo;</a>
+        {% endif %}
+    </div>
 </div>
 
 <div id="textModal" class="modal">

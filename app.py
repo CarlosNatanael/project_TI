@@ -1,14 +1,19 @@
-from flask import Flask, render_template, request, redirect, make_response
+from flask import Flask, render_template, request, redirect, make_response, session, flash, url_for
+from instance import config
 from flask_sqlalchemy import SQLAlchemy
 from collections import Counter
 from datetime import datetime
 from sqlalchemy import func
+from functools import wraps
 import zoneinfo
 import csv
 import io
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tickets_ti.db'
+app.secret_key = 'mude_para_uma_chave_bem_dificil_e_aleatoria'
+
+SENHA_TI = config.SENHA_TI
 db = SQLAlchemy(app)
 
 def get_hora_brasil():
@@ -38,7 +43,32 @@ class Ticket(db.Model):
 with app.app_context():
     db.create_all()
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logado' not in session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        senha_digitada = request.form.get('senha')
+        if senha_digitada == SENHA_TI:
+            session['logado'] = True
+            return redirect('/')
+        else:
+            flash('Senha incorreta. Acesso negado.')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logado', None)
+    return redirect('/login')
+
 @app.route('/tags', methods=['GET', 'POST'])
+@login_required
 def gerenciar_tags():
     if request.method == 'POST':
         nome_raw = request.form.get('nome')
@@ -59,6 +89,7 @@ def gerenciar_tags():
     return render_template('tags.html', tags=tags)
 
 @app.route('/tags/excluir/<int:id>', methods=['POST'])
+@login_required
 def excluir_tag(id):
     tag = Tag.query.get_or_404(id)
     db.session.delete(tag)
@@ -66,6 +97,7 @@ def excluir_tag(id):
     return redirect('/tags')
 
 @app.route('/')
+@login_required
 def dashboard():
     total_tickets = Ticket.query.count()
     abertos = Ticket.query.filter_by(status='Aberto').count()
@@ -106,6 +138,7 @@ def dashboard():
                            cores_grafico=cores_grafico)
 
 @app.route('/exportar')
+@login_required
 def exportar():
     tickets = Ticket.query.order_by(Ticket.id.desc()).all()
     output_buffer = io.StringIO()
@@ -125,6 +158,7 @@ def exportar():
     return response
 
 @app.route('/excluir/<int:id>', methods=['POST'])
+@login_required
 def excluir(id):
     ticket = Ticket.query.get_or_404(id)
     db.session.delete(ticket)
@@ -132,12 +166,14 @@ def excluir(id):
     return redirect('/consulta')
 
 @app.route('/consulta')
+@login_required
 def consulta():
     search = request.args.get('search', '')
     status_filtro = request.args.get('status', '')
     prioridade_filtro = request.args.get('prioridade', '')
     tag_filtro = request.args.get('tag', '')
-
+    
+    page = request.args.get('page', 1, type=int)
     query = Ticket.query
 
     if search:
@@ -150,13 +186,14 @@ def consulta():
         query = query.filter(Ticket.tags.contains(tag_filtro))
 
     query = query.order_by(Ticket.status == 'Concluído', Ticket.data_abertura.desc())
-    resultados = query.all()
+    chamados_paginados = query.paginate(page=page, per_page=15, error_out=False)
     
     cores_tags = {t.nome: t.cor for t in Tag.query.all()}
-    
-    return render_template('consulta.html', chamados=resultados, cores_tags=cores_tags, tag_ativa=tag_filtro)
+
+    return render_template('consulta.html', chamados=chamados_paginados, cores_tags=cores_tags, tag_ativa=tag_filtro)
 
 @app.route('/novo', methods=['GET', 'POST'])
+@login_required
 def entrada():
     if request.method == 'POST':
         tags_selecionadas = ','.join(request.form.getlist('tags'))
@@ -178,6 +215,7 @@ def entrada():
     return render_template('entrada.html', tags_disponiveis=tags_disponiveis, tags_ativas=[])
 
 @app.route('/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
 def editar(id):
     ticket = Ticket.query.get_or_404(id)
     
