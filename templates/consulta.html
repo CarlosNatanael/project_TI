@@ -117,7 +117,10 @@
                     <strong>{{ item.tecnico or 'Sem Atribuição' }}</strong><br>
                     <div style="margin-top: 5px; display: flex; gap: 5px; flex-wrap: wrap;">
                         <a href="/editar/{{ item.id }}" class="btn-edit" style="text-decoration: none; display: inline-block;"> Atualizar</a>
-                        <a href="/excluir/{{ item.id }}" class="btn-edit" style="text-decoration: none; display: inline-block; background-color: #e74c3c; border: none; color: white;" onclick="return confirm('Tem certeza que deseja EXCLUIR DEFINITIVAMENTE o ticket #{{ item.id }}? Esta ação não pode ser desfeita.');">Excluir</a>
+
+                        <form action="/excluir/{{ item.id }}" method="POST" style="display:inline; margin: 0;">
+                            <button type="submit" class="btn-edit" style="background-color: #e74c3c; border: none; color: white; cursor: pointer;" onclick="return confirm('Tem certeza que deseja EXCLUIR DEFINITIVAMENTE o ticket #{{ item.id }}? Esta ação não pode ser desfeita.');">Excluir</button>
+                        </form>
                     </div>
                 </td>
             </tr>
@@ -157,18 +160,35 @@
                     const motivo = this.getAttribute("data-motivo");
                     
                     modalTitle.textContent = `Ticket #${id}`;
-                    
-                    let conteudoModal = `<strong>Descrição do Problema:</strong><br>${desc}`;
-                    
+                    modalText.innerHTML = '';
+
+                    const descContainer = document.createElement('div');
+                    descContainer.innerHTML = '<strong>Descrição do Problema:</strong><br>';
+                    const descText = document.createElement('span');
+                    descText.textContent = desc;
+                    descContainer.appendChild(descText);
+                    modalText.appendChild(descContainer);
+
                     if (motivo) {
-                        conteudoModal += `<hr style="margin: 15px 0; border-top: 1px solid var(--border-color);"><div style="color: #e67e22;"><strong>Pendência:</strong><br>${motivo}</div>`;
+                        const motivoContainer = document.createElement('div');
+                        motivoContainer.style.cssText = 'color: #e67e22; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;';
+                        motivoContainer.innerHTML = '<strong>Pendência:</strong><br>';
+                        const motivoText = document.createElement('span');
+                        motivoText.textContent = motivo; 
+                        motivoContainer.appendChild(motivoText);
+                        modalText.appendChild(motivoContainer);
                     }
                     
                     if (solucao) {
-                        conteudoModal += `<hr style="margin: 15px 0; border-top: 1px solid var(--border-color);"><div style="color: #27ae60;"><strong>Solução:</strong><br>${solucao}</div>`;
+                        const solucaoContainer = document.createElement('div');
+                        solucaoContainer.style.cssText = 'color: #27ae60; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;';
+                        solucaoContainer.innerHTML = '<strong>Solução:</strong><br>';
+                        const solucaoText = document.createElement('span');
+                        solucaoText.textContent = solucao; 
+                        solucaoContainer.appendChild(solucaoText);
+                        modalText.appendChild(solucaoContainer);
                     }
                     
-                    modalText.innerHTML = conteudoModal;
                     modal.style.display = "block";
                 });
             });
