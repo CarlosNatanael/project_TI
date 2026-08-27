@@ -87,7 +87,35 @@ def gerenciar_tags():
         return redirect('/tags')
     
     tags = Tag.query.all()
-    return render_template('tags.html', tags=tags)
+    tag_counts = {}
+    for t in tags:
+        tag_counts[t.nome] = Ticket.query.filter(Ticket.tags.contains(t.nome)).count()
+        
+    return render_template('tags.html', tags=tags, tag_counts=tag_counts)
+
+@app.route('/tags/editar/<int:id>', methods=['POST'])
+@login_required
+def editar_tag(id):
+    tag = Tag.query.get_or_404(id)
+    novo_nome = request.form.get('nome')
+    nova_cor = request.form.get('cor')
+    
+    if novo_nome and novo_nome.strip():
+        novo_nome = novo_nome.strip()
+        nome_antigo = tag.nome
+        
+        if nome_antigo != novo_nome:
+            tickets_afetados = Ticket.query.filter(Ticket.tags.contains(nome_antigo)).all()
+            for t in tickets_afetados:
+                lista_tags = [tg.strip() for tg in t.tags.split(',')]
+                nova_lista = [novo_nome if tg == nome_antigo else tg for tg in lista_tags]
+                t.tags = ','.join(nova_lista)
+                
+        tag.nome = novo_nome
+        tag.cor = nova_cor
+        db.session.commit()
+        
+    return redirect('/tags')
 
 @app.route('/tags/excluir/<int:id>', methods=['POST'])
 @login_required
@@ -251,4 +279,4 @@ def editar(id):
     return render_template('entrada.html', ticket=ticket, tags_disponiveis=tags_disponiveis, tags_ativas=tags_ativas)
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
