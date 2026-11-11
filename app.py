@@ -279,4 +279,4 @@ def editar(id):
     return render_template('entrada.html', ticket=ticket, tags_disponiveis=tags_disponiveis, tags_ativas=tags_ativas)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
